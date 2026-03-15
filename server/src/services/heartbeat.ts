@@ -170,6 +170,13 @@ function readNonEmptyString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
+function readNonEmptyStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim());
+}
+
 function normalizeUsageTotals(usage: UsageSummary | null | undefined): UsageTotals | null {
   if (!usage) return null;
   return {
@@ -395,11 +402,18 @@ function enrichWakeContextSnapshot(input: {
   const { contextSnapshot, reason, source, triggerDetail, payload } = input;
   const issueIdFromPayload = readNonEmptyString(payload?.["issueId"]);
   const commentIdFromPayload = readNonEmptyString(payload?.["commentId"]);
+  const wakePromptFromPayload = readNonEmptyString(payload?.["prompt"]);
+  const approvalIdFromPayload = readNonEmptyString(payload?.["approvalId"]);
+  const approvalStatusFromPayload = readNonEmptyString(payload?.["approvalStatus"]);
+  const issueIdsFromPayload = readNonEmptyStringArray(payload?.["issueIds"]);
   const taskKey = deriveTaskKey(contextSnapshot, payload);
   const wakeCommentId = deriveCommentId(contextSnapshot, payload);
 
   if (!readNonEmptyString(contextSnapshot["wakeReason"]) && reason) {
     contextSnapshot.wakeReason = reason;
+  }
+  if (!readNonEmptyString(contextSnapshot["paperclipWakeReason"]) && reason) {
+    contextSnapshot.paperclipWakeReason = reason;
   }
   if (!readNonEmptyString(contextSnapshot["issueId"]) && issueIdFromPayload) {
     contextSnapshot.issueId = issueIdFromPayload;
@@ -421,6 +435,21 @@ function enrichWakeContextSnapshot(input: {
   }
   if (!readNonEmptyString(contextSnapshot["wakeTriggerDetail"]) && triggerDetail) {
     contextSnapshot.wakeTriggerDetail = triggerDetail;
+  }
+  if (!readNonEmptyString(contextSnapshot["approvalId"]) && approvalIdFromPayload) {
+    contextSnapshot.approvalId = approvalIdFromPayload;
+  }
+  if (!readNonEmptyString(contextSnapshot["approvalStatus"]) && approvalStatusFromPayload) {
+    contextSnapshot.approvalStatus = approvalStatusFromPayload;
+  }
+  if (readNonEmptyStringArray(contextSnapshot["issueIds"]).length === 0 && issueIdsFromPayload.length > 0) {
+    contextSnapshot.issueIds = issueIdsFromPayload;
+  }
+  if (payload && Object.keys(payload).length > 0) {
+    contextSnapshot.paperclipWakePayload = payload;
+  }
+  if (!readNonEmptyString(contextSnapshot["paperclipWakePrompt"]) && wakePromptFromPayload) {
+    contextSnapshot.paperclipWakePrompt = wakePromptFromPayload;
   }
 
   return {

@@ -104,6 +104,18 @@ function firstNonEmptyLine(text: string): string | null {
   return null;
 }
 
+function readNonEmptyStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim());
+}
+
+function formatWakePayloadMarkdown(payload: Record<string, unknown>): string {
+  if (Object.keys(payload).length === 0) return "";
+  return `# Wake payload JSON\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\``;
+}
+
 async function fetchIssueContext(
   apiUrl: string,
   authToken: string | undefined,
@@ -173,9 +185,20 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
 
   await ensureAbsoluteDirectory(workspace, { createIfMissing: false });
 
-  const wakePrompt = asString(context.paperclipWakePrompt, "").trim();
-  const issueId = readNonEmptyString(context.issueId);
-  const wakeCommentId = readNonEmptyString(context.wakeCommentId) ?? readNonEmptyString(context.commentId);
+  const wakePayload = parseObject(context.paperclipWakePayload);
+  const wakePrompt =
+    readNonEmptyString(context.paperclipWakePrompt) ??
+    readNonEmptyString(wakePayload.prompt) ??
+    "";
+  const issueId =
+    readNonEmptyString(context.issueId) ??
+    readNonEmptyString(context.taskId) ??
+    readNonEmptyString(wakePayload.issueId);
+  const wakeCommentId =
+    readNonEmptyString(context.wakeCommentId) ??
+    readNonEmptyString(context.commentId) ??
+    readNonEmptyString(wakePayload.commentId);
+  const wakePayloadMarkdown = formatWakePayloadMarkdown(wakePayload);
   const issueContext = await fetchIssueContext(
     process.env.PAPERCLIP_API_URL ?? buildPaperclipEnv(agent).PAPERCLIP_API_URL,
     authToken,
@@ -196,6 +219,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const renderedPrompt = renderTemplate(promptTemplate, templateData).trim();
   const prompt = joinPromptSections([
     wakePrompt ? `# Direct wake request\n${wakePrompt}` : "",
+    wakePayloadMarkdown,
     issueMarkdown,
     sessionHandoff ? `# Previous session handoff\n${sessionHandoff}` : "",
     renderedPrompt,
@@ -205,7 +229,22 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   env.PAPERCLIP_RUN_ID = runId;
   if (issueId) env.PAPERCLIP_TASK_ID = issueId;
   const wakeReason = readNonEmptyString(context.paperclipWakeReason) ?? readNonEmptyString(context.wakeReason);
+  const approvalId =
+    readNonEmptyString(context.approvalId) ??
+    readNonEmptyString(wakePayload.approvalId);
+  const approvalStatus =
+    readNonEmptyString(context.approvalStatus) ??
+    readNonEmptyString(wakePayload.approvalStatus);
+  const linkedIssueIds = (() => {
+    const fromContext = readNonEmptyStringArray(context.issueIds);
+    if (fromContext.length > 0) return fromContext;
+    return readNonEmptyStringArray(wakePayload.issueIds);
+  })();
   if (wakeReason) env.PAPERCLIP_WAKE_REASON = wakeReason;
+  if (wakeCommentId) env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
+  if (approvalId) env.PAPERCLIP_APPROVAL_ID = approvalId;
+  if (approvalStatus) env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
+  if (linkedIssueIds.length > 0) env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
   if (authToken && !readNonEmptyString(envConfig.PAPERCLIP_API_KEY)) {
     env.PAPERCLIP_API_KEY = authToken;
   }
@@ -244,12 +283,16 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       promptMetrics: {
         promptChars: prompt.length,
         wakePromptChars: wakePrompt.length,
+        wakePayloadChars: wakePayloadMarkdown.length,
         issueContextChars: issueMarkdown.length,
         sessionHandoffChars: sessionHandoff.length,
       },
       context: {
         issueId,
         wakeCommentId,
+        approvalId,
+        approvalStatus,
+        linkedIssueIds,
         taskKey: readNonEmptyString(runtime.taskKey) ?? readNonEmptyString(context.taskKey),
         sessionId,
       },
