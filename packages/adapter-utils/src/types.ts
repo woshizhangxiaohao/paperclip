@@ -224,6 +224,8 @@ export interface CLIAdapterModule {
 export interface CreateConfigValues {
   adapterType: string;
   cwd: string;
+  configPath?: string;
+  workspacePath?: string;
   instructionsFilePath?: string;
   promptTemplate: string;
   model: string;

@@ -115,6 +115,25 @@ pnpm build
 
 If anything cannot be run, explicitly report what was not run and why.
 
+## 7.1 Fork Maintenance Rule (Required)
+
+This fork contains company custom integrations that must stay valid across upstream syncs:
+
+- custom adapter: `nanobot_local`
+- custom plugin: `packages/plugins/paperclip-agent-bridge`
+
+After **every** upstream sync/rebase/merge, agents must run:
+
+```sh
+pnpm run verify:company-custom
+```
+
+If it fails:
+
+1. Do not continue with restart/deploy.
+2. Repair integration points reported by the checker.
+3. Re-run `pnpm run verify:company-custom` until it passes.
+
 ## 8. API and Auth Expectations
 
 - Base path: `/api`

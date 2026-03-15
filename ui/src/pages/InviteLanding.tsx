@@ -13,6 +13,7 @@ type JoinType = "human" | "agent";
 const joinAdapterOptions: AgentAdapterType[] = [...AGENT_ADAPTER_TYPES];
 
 const adapterLabels: Record<string, string> = {
+  nanobot_local: "Nanobot (local)",
   claude_local: "Claude (local)",
   codex_local: "Codex (local)",
   gemini_local: "Gemini CLI (local)",
@@ -23,7 +24,7 @@ const adapterLabels: Record<string, string> = {
   http: "HTTP",
 };
 
-const ENABLED_INVITE_ADAPTERS = new Set(["claude_local", "codex_local", "gemini_local", "opencode_local", "cursor"]);
+const ENABLED_INVITE_ADAPTERS = new Set(["nanobot_local", "claude_local", "codex_local", "gemini_local", "opencode_local", "cursor"]);
 
 function dateTime(value: string) {
   return new Date(value).toLocaleString();

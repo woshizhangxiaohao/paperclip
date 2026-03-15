@@ -40,6 +40,8 @@ export const help: Record<string, string> = {
   runtimeServicesJson: "Optional workspace runtime service definitions. Use this for shared app servers, workers, or other long-lived companion processes attached to the workspace.",
   maxTurnsPerRun: "Maximum number of agentic turns (tool calls) per heartbeat run.",
   command: "The command to execute (e.g. node, python).",
+  configPath: "Path to the employee's nanobot config.json file.",
+  workspacePath: "Absolute path to the real nanobot employee workspace.",
   localCommand: "Override the path to the CLI command you want the adapter to call (e.g. /usr/local/bin/claude, codex, opencode).",
   args: "Command-line arguments, comma-separated.",
   extraArgs: "Extra CLI arguments for local adapters, comma-separated.",
@@ -58,6 +60,7 @@ export const help: Record<string, string> = {
 };
 
 export const adapterLabels: Record<string, string> = {
+  nanobot_local: "Nanobot (local)",
   claude_local: "Claude (local)",
   codex_local: "Codex (local)",
   gemini_local: "Gemini CLI (local)",

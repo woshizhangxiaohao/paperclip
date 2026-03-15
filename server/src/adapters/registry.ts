@@ -62,6 +62,7 @@ import {
 } from "hermes-paperclip-adapter";
 import { processAdapter } from "./process/index.js";
 import { httpAdapter } from "./http/index.js";
+import { nanobotLocalAdapter } from "./nanobot-local/index.js";
 
 const claudeLocalAdapter: ServerAdapterModule = {
   type: "claude_local",
@@ -148,6 +149,7 @@ const hermesLocalAdapter: ServerAdapterModule = {
 
 const adaptersByType = new Map<string, ServerAdapterModule>(
   [
+    nanobotLocalAdapter,
     claudeLocalAdapter,
     codexLocalAdapter,
     openCodeLocalAdapter,

@@ -1,0 +1,11 @@
+{
+  "name": "@zhx/paperclip-agent-bridge",
+  "version": "0.1.0",
+  "description": "Company Paperclip plugin that lets agents contact other agents through agent sessions.",
+  "type": "module",
+  "private": true,
+  "paperclipPlugin": {
+    "manifest": "./src/manifest.js",
+    "worker": "./src/worker.js"
+  }
+}

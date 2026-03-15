@@ -116,6 +116,7 @@ function collectEdges(nodes: LayoutNode[]): Array<{ parent: LayoutNode; child: L
 // ── Status dot colors (raw hex for SVG) ─────────────────────────────────
 
 const adapterLabels: Record<string, string> = {
+  nanobot_local: "Nanobot",
   claude_local: "Claude",
   codex_local: "Codex",
   gemini_local: "Gemini",
